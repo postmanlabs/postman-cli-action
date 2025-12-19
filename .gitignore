@@ -1,0 +1,29 @@
+# Node modules
+node_modules/
+
+# Test results and reports
+results.json
+results.xml
+newman/
+
+# Environment files (should not be committed)
+*.env
+.env*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+
+# Postman CLI cache
+.postman/

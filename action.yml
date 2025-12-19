@@ -1,0 +1,102 @@
+name: 'Postman CLI'
+description: 'Run Postman CLI commands in GitHub Actions - supports collection run, monitor run, spec lint, and more'
+author: 'Postman'
+branding:
+  icon: 'check-circle'
+  color: 'orange'
+
+inputs:
+  command:
+    description: 'Postman CLI command to run (e.g., "collection run <collection-id>" or "collection run <collection-file.json>")'
+    required: true
+  api-key:
+    description: 'Postman API key for authentication. Required for cloud resources (collection IDs, monitor IDs, spec IDs). Optional for local files.'
+    required: false
+  region:
+    description: 'Postman API region. Use "eu" for European data residency. Defaults to US region if not specified.'
+    required: false
+    default: ''
+  postman-cli-version:
+    description: 'Version of Postman CLI to install (e.g., "1.27.0"). Defaults to latest.'
+    required: false
+    default: 'latest'
+  working-directory:
+    description: 'Directory to run the command from. Defaults to repository root.'
+    required: false
+    default: '.'
+
+outputs:
+  exit-code:
+    description: 'Exit code from the Postman CLI command (0 = success, non-zero = failure)'
+    value: ${{ steps.execute.outputs.exit-code }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    
+    - name: Install Postman CLI
+      shell: bash
+      env:
+        POSTMAN_CLI_VERSION: ${{ inputs.postman-cli-version }}
+      run: |
+        echo "Installing Postman CLI..."
+        if [ "$POSTMAN_CLI_VERSION" = "latest" ]; then
+          npm install -g postman-cli
+        else
+          npm install -g postman-cli@$POSTMAN_CLI_VERSION
+        fi
+        echo "Installed version: $(postman --version)"
+    
+    - name: Authenticate with Postman
+      shell: bash
+      env:
+        POSTMAN_API_KEY_INPUT: ${{ inputs.api-key }}
+        POSTMAN_REGION: ${{ inputs.region }}
+      run: |
+        REGION_FLAG=""
+        if [ -n "$POSTMAN_REGION" ]; then
+          REGION_FLAG="--region $POSTMAN_REGION"
+        fi
+        
+        if [ -n "$POSTMAN_API_KEY_INPUT" ]; then
+          echo "Authenticating with Postman..."
+          postman login --with-api-key "$POSTMAN_API_KEY_INPUT" $REGION_FLAG
+        elif [ -n "$POSTMAN_API_KEY" ]; then
+          echo "Authenticating with Postman using POSTMAN_API_KEY from environment..."
+          postman login --with-api-key "$POSTMAN_API_KEY" $REGION_FLAG
+        else
+          echo "No API key provided. Skipping authentication."
+        fi
+    
+    - name: Execute Postman CLI Command
+      id: execute
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        POSTMAN_API_KEY_INPUT: ${{ inputs.api-key }}
+        POSTMAN_COMMAND: ${{ inputs.command }}
+      run: |
+        if [ -n "$POSTMAN_API_KEY_INPUT" ]; then
+          export POSTMAN_API_KEY="$POSTMAN_API_KEY_INPUT"
+        fi
+        
+        # Strip "postman" prefix if user accidentally included it
+        POSTMAN_COMMAND="${POSTMAN_COMMAND#postman }"
+        
+        echo "Executing: postman $POSTMAN_COMMAND"
+        
+        # Run command and capture exit code
+        set +e
+        postman $POSTMAN_COMMAND
+        EXIT_CODE=$?
+        set -e
+        
+        # Set output
+        echo "exit-code=$EXIT_CODE" >> $GITHUB_OUTPUT
+        
+        # Exit with the captured code
+        exit $EXIT_CODE

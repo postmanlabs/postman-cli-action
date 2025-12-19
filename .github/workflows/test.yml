@@ -1,0 +1,158 @@
+name: Test Postman CLI Action
+
+on:
+  push:
+    branches: [develop, master]
+  pull_request:
+    branches: [develop, master]
+  workflow_dispatch:
+
+jobs:
+  test-basic:
+    name: Basic Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Verify Postman CLI Installation
+        uses: ./
+        with:
+          command: '--version'
+      
+      - name: Verify Postman CLI Help
+        uses: ./
+        with:
+          command: '--help'
+
+  test-local-collection:
+    name: Test Local Collection Run
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Run Local Collection
+        id: run-collection
+        uses: ./
+        with:
+          command: 'collection run tests/postman-echo-collection.json --environment tests/postman-echo-environment.json'
+      
+      - name: Verify Exit Code
+        run: |
+          echo "Exit code: ${{ steps.run-collection.outputs.exit-code }}"
+          if [ "${{ steps.run-collection.outputs.exit-code }}" != "0" ]; then
+            echo "Collection run failed"
+            exit 1
+          fi
+      
+      - name: Run Collection with Reporters
+        uses: ./
+        with:
+          command: 'collection run tests/postman-echo-collection.json --environment tests/postman-echo-environment.json --reporters cli,json,junit --reporter-json-export results.json --reporter-junit-export results.xml'
+      
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: local-collection-results
+          path: |
+            results.json
+            results.xml
+
+  test-version-pinning:
+    name: Test CLI Version Pinning
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Run with Pinned CLI Version
+        id: pinned-run
+        uses: ./
+        with:
+          command: 'collection run tests/postman-echo-collection.json --environment tests/postman-echo-environment.json'
+          postman-cli-version: '1.27.0'
+      
+      - name: Verify Pinned Version Output
+        run: |
+          echo "Pinned version run exit code: ${{ steps.pinned-run.outputs.exit-code }}"
+
+  test-exit-code-output:
+    name: Test Exit Code Output
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Run Collection and Capture Exit Code
+        id: test-run
+        uses: ./
+        continue-on-error: true
+        with:
+          command: 'collection run tests/postman-echo-collection.json --environment tests/postman-echo-environment.json'
+      
+      - name: Use Exit Code in Subsequent Step
+        run: |
+          EXIT_CODE="${{ steps.test-run.outputs.exit-code }}"
+          echo "Captured exit code: $EXIT_CODE"
+          if [ "$EXIT_CODE" = "0" ]; then
+            echo "All tests passed"
+          else
+            echo "Tests failed with exit code: $EXIT_CODE"
+          fi
+
+  test-cloud-collection:
+    name: Test Cloud Collection Run
+    runs-on: ubuntu-latest
+    if: ${{ vars.TEST_COLLECTION_ID != '' }}
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Run Cloud Collection (API key via input)
+        uses: ./
+        with:
+          command: 'collection run ${{ vars.TEST_COLLECTION_ID }} --environment ${{ vars.TEST_ENVIRONMENT_ID }}'
+          api-key: ${{ secrets.POSTMAN_API_KEY }}
+      
+      - name: Run Cloud Collection (API key via env)
+        uses: ./
+        env:
+          POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
+        with:
+          command: 'collection run ${{ vars.TEST_COLLECTION_ID }} --environment ${{ vars.TEST_ENVIRONMENT_ID }}'
+
+  test-cloud-monitor:
+    name: Test Cloud Monitor Run
+    runs-on: ubuntu-latest
+    if: ${{ vars.TEST_MONITOR_ID != '' }}
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Run Monitor
+        uses: ./
+        with:
+          command: 'monitor run ${{ vars.TEST_MONITOR_ID }}'
+          api-key: ${{ secrets.POSTMAN_API_KEY }}
+
+  test-working-directory:
+    name: Test Working Directory Option
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      
+      - name: Run Collection from Subdirectory
+        uses: ./
+        with:
+          command: 'collection run postman-echo-collection.json --environment postman-echo-environment.json'
+          working-directory: 'tests'

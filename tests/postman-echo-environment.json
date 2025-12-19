@@ -1,0 +1,31 @@
+{
+  "id": "postman-echo-environment",
+  "name": "Postman Echo Environment",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "https://postman-echo.com",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "userName",
+      "value": "Postman CLI Action",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "environmentName",
+      "value": "ci",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "testParam",
+      "value": "hello-world",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}
