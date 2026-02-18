@@ -90,8 +90,9 @@ runs:
         echo "Executing: postman $POSTMAN_COMMAND"
         
         # Run command and capture exit code
+        # Use eval to properly handle quoted arguments (e.g., filenames with spaces)
         set +e
-        postman $POSTMAN_COMMAND
+        eval "postman $POSTMAN_COMMAND"
         EXIT_CODE=$?
         set -e
         
