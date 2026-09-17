@@ -11,6 +11,7 @@ jobs:
   test-basic:
     name: Basic Tests
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     
     steps:
       - name: Checkout Repository
@@ -29,6 +30,7 @@ jobs:
   test-local-collection:
     name: Test Local Collection Run
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     
     steps:
       - name: Checkout Repository
@@ -65,6 +67,7 @@ jobs:
   test-version-pinning:
     name: Test CLI Version Pinning
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     
     steps:
       - name: Checkout Repository
@@ -84,6 +87,7 @@ jobs:
   test-exit-code-output:
     name: Test Exit Code Output
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     
     steps:
       - name: Checkout Repository
@@ -109,6 +113,7 @@ jobs:
   test-cloud-collection:
     name: Test Cloud Collection Run
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: ${{ vars.TEST_COLLECTION_ID != '' }}
     
     steps:
@@ -131,6 +136,7 @@ jobs:
   test-cloud-monitor:
     name: Test Cloud Monitor Run
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: ${{ vars.TEST_MONITOR_ID != '' }}
     
     steps:
@@ -146,6 +152,7 @@ jobs:
   test-working-directory:
     name: Test Working Directory Option
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     
     steps:
       - name: Checkout Repository
