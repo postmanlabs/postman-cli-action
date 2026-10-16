@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       
       - name: Verify Postman CLI Installation
         uses: ./
@@ -33,6 +35,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       
       - name: Run Local Collection
         id: run-collection
@@ -69,6 +73,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       
       - name: Run with Pinned CLI Version
         id: pinned-run
@@ -88,6 +94,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       
       - name: Run Collection and Capture Exit Code
         id: test-run
@@ -114,6 +122,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       
       - name: Run Cloud Collection (API key via input)
         uses: ./
@@ -136,6 +146,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       
       - name: Run Monitor
         uses: ./
@@ -150,6 +162,8 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       
       - name: Run Collection from Subdirectory
         uses: ./
